@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" type="text/css" href="../static/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../static/style.css">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+
+    <link rel="icon" type="image/png" href="https://img.icons8.com/clouds/100/000000/google-web-search.png">
+</head>
+<body>
+    <header class="site-header">
+    </header>
+    <div class="jumbotron vertical-center text-center">
+        <div class="container">
+            <h3 class="text-danger p-3">Welcome to currency changer!</h3>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="row col-12 col-md-0 justify-content-center mx-auto">
+                <div class="col-8 col-md-2 col-md-auto p-0 align-self-center">
+                    <input class="text-right form-control" placeholder="for example 123456.78" id="amount">
+                </div>
+                <div class="col-4 col-md-1 p-0 align-self-center">
+                    <select class="form-control" id="input_type">
+                        {% for currency in currencies %}
+                        <option value="{{ currency }}">{{ currency }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <h4 class="col-12 col-md-2 p-2 align-self-center">change to</h4>
+                <div class="col-4 col-md-1 p-0 align-self-center">
+                    <select class="form-control" id="output_type">
+                        <div class="dropper">
+                        <option value="ALL">ALL</option>
+                        {% for currency in currencies %}
+                        <option value="{{ currency }}">{{ currency }}</option>
+                        {% endfor %}
+                        </div>
+                    </select>
+                </div>
+            </div>
+            <ul class="col-12 col-md-8 p-3 mx-auto" id="myUL">
+                {% for currency in currencies %}
+                <li>0 <span>{{ currency }}</span></li>
+                {% endfor %}
+            </ul>
+            <span class="text-muted">currency changer and author bear no responsibility for inacurate output values</br></span>
+        </div>
+    </div>
+    <script id="changer" type="text/javascript">
+    $(function() {
+        $('#amount, #input_type').on('keyup change', function(e) {
+        e.preventDefault();
+        var amount = $('#amount').val();
+        var currency = $('#input_type').val()
+        var output = document.getElementById('output');
+        var csrf_token = "{{ csrf_token() }}";
+            if (amount > 0) {
+                $.ajax({
+                    type: "GET",
+                    url: "/change/" + amount + '/' + currency,
+                    headers: {
+                        "X-CSRFToken": csrf_token
+                    },
+                    data: { 
+                        amount: amount,
+                        currency: currency,
+                    },
+                    success:function(data) {
+                        var ul = document.getElementById('myUL');
+                        var li = ul.getElementsByTagName('li');
+                        for (i = 0; i < li.length; i++) {
+                            var span = li[i].getElementsByTagName('span')[0];
+                            currency_name = span.innerText;
+                            li[i].innerHTML = data['output'][currency_name] + " <span>" + currency_name + "</span>";
+                        }
+                    },
+                    error:function(data) {
+                        alert('change error');
+                    }
+                });
+            } else {
+                console.log('Wrong or No input')
+            }
+        });
+    });
+    </script>
+    <script id="hider" type="text/javascript">
+    $(function() {
+        $('#output_type').on('change', function() {
+            var output_currency, ul, li, a, i, txtValue;
+            output_set = $('#output_type').val();
+            ul = document.getElementById('myUL');
+            li = ul.getElementsByTagName('li');
+        
+            for (i = 0; i < li.length; i++) {
+                span = li[i].getElementsByTagName('span')[0];
+                output_text = span.innerText;
+                if (output_text == output_set) {
+                    li[i].style.display = "";
+                } else if (output_set == 'ALL') {
+                    li[i].style.display = "";
+                } else {
+                    li[i].style.display = "none";
+                }
+            }
+        });
+    });
+    </script>
+</body>
+</html>
