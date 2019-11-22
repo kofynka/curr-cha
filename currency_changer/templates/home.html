@@ -30,6 +30,7 @@
                 <div class="col-8 col-md-2 col-md-auto p-0 align-self-center">
                     <input class="text-right form-control" placeholder="for example 123456.78" id="amount">
                 </div>
+                
                 <div class="col-4 col-md-1 p-0 align-self-center">
                     <select class="form-control" id="input_type">
                         {% for currency in currencies %}
@@ -47,6 +48,9 @@
                         {% endfor %}
                         </div>
                     </select>
+                </div>
+                <div class="invalid-feedback" id="error">
+                    <span>Wrong input</span>
                 </div>
             </div>
             <ul class="col-12 col-md-8 p-3 mx-auto" id="myUL">
@@ -77,10 +81,12 @@
                         currency: currency,
                     },
                     success:function(data) {
+                        console.log(data);
                         var ul = document.getElementById('myUL');
                         var li = ul.getElementsByTagName('li');
                         for (i = 0; i < li.length; i++) {
                             var span = li[i].getElementsByTagName('span')[0];
+                            $('#error').hide();
                             currency_name = span.innerText;
                             li[i].innerHTML = data['output'][currency_name] + " <span>" + currency_name + "</span>";
                         }
@@ -91,6 +97,7 @@
                 });
             } else {
                 console.log('Wrong or No input')
+                $('#error').show();
             }
         });
     });

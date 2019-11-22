@@ -1,12 +1,11 @@
 from flask import render_template, url_for, flash, redirect, request, jsonify
 from currency_changer import app
 from currency_converter import CurrencyConverter
-import requests, json
 
 c = CurrencyConverter(fallback_on_missing_rate=True)
 
-@app.route("/", methods=['GET', 'POST'])
-@app.route("/home", methods=['GET', 'POST'])
+@app.route("/", methods=['GET'])
+@app.route("/home", methods=['GET'])
 def home():
     currencies = get_currencies()
     return render_template('home.html', title='Home', currencies=currencies)
