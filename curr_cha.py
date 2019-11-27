@@ -27,7 +27,6 @@ def change_rates(amount, input_currency):
     return result
 
 
-
 @click.command()
 @click.option('-a', '--amount', type=float, required=True, help='Amount of currency you want to change.')
 @click.option('-in', '--input_currency', type=str, required=True, help='From what currency (3 letters or currency symbol)')
@@ -38,9 +37,17 @@ def change(amount, input_currency, output_currency):
     """
     output = {}
     input_currency = handle_input(input_currency)
+    
+
     # if there is param with output_currency
     if output_currency:
         output_currency = handle_output(output_currency)
+
+        # because api doesn't return eur to eur rate
+        if input_currency == output_currency:
+            print('From currency to same currency is not possible')
+            sys.exit()
+
         value = change_rates(amount, input_currency)[output_currency]
         changed_value = zero_format(value)
         output[output_currency] = changed_value
@@ -85,7 +92,7 @@ def finder(output_currency):
                     sys.exit()
             else:
                 # if only one element in list return it as string
-                return x     
+                return ''.join(x)
         else:
             print("I didn't found your symbol")
             sys.exit()

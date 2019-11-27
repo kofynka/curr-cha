@@ -15,7 +15,10 @@ def get_rates(input_currency):
     
 
 def load_to_redis(input_currency):
-    response = requests.get('https://api.exchangeratesapi.io/latest?base=' + f'{input_currency}')
+    try:
+        response = requests.get('https://api.exchangeratesapi.io/latest?base=' + f'{input_currency}')
+    except Exception as e:
+        print(e)
     return json.dumps(response.json())
 
 
