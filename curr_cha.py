@@ -1,5 +1,5 @@
-from currency_converter import CurrencyConverter
-import pprint, json, click, sys
+from currency_changer.curr_cha_api import get_rates
+import pprint, click, sys, time
 
 
 # only valid and interesting currencies already picked and sorted
@@ -8,10 +8,6 @@ symbols = {'€': ['EUR'], '$': ['AUD', 'CAD', 'MXN', 'NZD', 'SGD', 'USD'],
          'Kč': ['CZK'], 'kr': ['DKK', 'NOK', 'SEK'], '£': ['GBP'], 'H$': ['HKD'],
          'kn': ['HRK'], 'Ft': ['HUF'], '₪': ['ILS'], '₹': ['INR'], '₩': ['KRW'],
          'zł': ['PLN'], '₽': ['RUB'], '฿': ['THB'], '₺': ['TRY'], 'R': ['ZAR']}
-
-__author__ = "well me"
-
-c = CurrencyConverter(fallback_on_missing_rate=True)
 
 currencies = []
 for val in symbols.values():
@@ -22,6 +18,16 @@ for val in symbols.values():
         currencies.append(val[0])
 
 
+def change_rates(amount, input_currency):
+    rates = get_rates(input_currency)['rates']
+    result = {}
+    for key, val in rates.items():
+        x = float(amount) * float(val)
+        result[key] = x
+    return result
+
+
+
 @click.command()
 @click.option('-a', '--amount', type=float, required=True, help='Amount of currency you want to change.')
 @click.option('-in', '--input_currency', type=str, required=True, help='From what currency (3 letters or currency symbol)')
@@ -30,48 +36,39 @@ def change(amount, input_currency, output_currency):
     """
     This is simple CLI app for changing currencies
     """
+    output = {}
     input_currency = handle_input(input_currency)
     # if there is param with output_currency
     if output_currency:
         output_currency = handle_output(output_currency)
-    else:
-        output_currency = currencies
-        print('Set output currency to ALL!')
-
-    output = {}
-    if len(output_currency) == 1:
-        value = c.convert(amount, input_currency, (output_currency)[0])
+        value = change_rates(amount, input_currency)[output_currency]
         changed_value = zero_format(value)
-        output[output_currency[0]] = changed_value
-    elif len(output_currency) > 1:
-        i = 0
-        for x in output_currency:
-            value = c.convert(amount, input_currency, x)
-            changed_value = zero_format(value)
-            output[x] = changed_value
-            i = i + 1 
+        output[output_currency] = changed_value
+    else:
+        print('Set output currency to ALL!')
+        output = change_rates(amount, input_currency)
 
     full_output = {'input':{'amount':amount, 'currency':input_currency},'output':output}
     # print nicely
     pprint.pprint(full_output)
+    return full_output
     # click.echo(full_output)
 
 
 def handle_input(input_currency):
-    x = input_currency
-    input_currency = finder(x)[0]
+    input_currency = finder(input_currency)
     print('Got input currency!')
     return input_currency
 
 
 def handle_output(output_currency):
-    x = output_currency
-    output_currency = finder(x)
+    output_currency = finder(output_currency)
     print('Got output currency!')
     return output_currency
 
 
-def finder(x):
+def finder(output_currency):
+    x = output_currency 
     # if symbol try to find it
     if len(x) < 3:
         # looking for key with same symbol and if there is puts in list
@@ -81,14 +78,14 @@ def finder(x):
             if len(x) > 1:
                 answer = input('There are more currencies with that symbol please specify from following:{0}\n (should be 3 letters)\n'.format(x)).upper()
                 if answer in x:
-                    x = [answer]
+                    x = answer.upper()
                     return x
                 else:
                     print("Come on! That wasn't so hard to do. ;)")
                     sys.exit()
             else:
                 # if only one element in list return it as string
-                return x        
+                return x     
         else:
             print("I didn't found your symbol")
             sys.exit()
@@ -101,7 +98,6 @@ def finder(x):
         x = x.upper()
         for key, val in symbols.items():
             if x in val:
-                x = val
                 return x
         else:
             print("I am sorry but that currency is not in our database. :(")
